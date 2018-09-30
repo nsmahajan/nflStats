@@ -16,6 +16,7 @@ class ChartDropDown extends Component {
       <select className="chartTypeSelect" defaultValue={this.props.currentSelectedChart} onChange={this.handleChange}>
         <option value="age">NFL Age Stats</option>
         <option value="heightWeight">NFL Height/Weight Stats</option>
+        <option value="winningLosing">Winning/Losing Score Trend</option>
       </select>
     );
   }

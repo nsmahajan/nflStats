@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import './App.css';
-import ScatterChart from './ScatterChart'
-import BarChart from './BarChart'
-import Popup from './Popup'
-import ChartDropDown from './ChartDropDown'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPen } from '@fortawesome/free-solid-svg-icons'
-import {processRequiredFieldsOnly} from './utils'
+import ScatterChart from './charts/ScatterChart';
+import BarChart from './charts/BarChart';
+import LineChart from './charts/LineChart';
+import Popup from './Popup';
+import ChartDropDown from './ChartDropDown';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPen } from '@fortawesome/free-solid-svg-icons';
+import {processRequiredFieldsOnly, processRequiredFieldsAllSeasons} from './utils/utils';
 
 class App extends Component {
 	constructor(props) {
@@ -15,10 +16,10 @@ class App extends Component {
 		
 		this.state = {
 			teams: {},
-			chart1Title: "Average age of team players",
-			chart2Title: "Height/Weight Statistics",
+			chartTitle: ["Average age of team players","Height/Weight Statistics", "Winning/Losing Team Scores"],
 			currentSelectedChart: "age",
-			showPopup: false
+			showPopup: false,
+			allSeasons:{}
 		};
 
 		this.chartDropDownChange = this.chartDropDownChange.bind(this);
@@ -30,18 +31,20 @@ class App extends Component {
 	}
 
 	saveChartTitle(newTitle){
+		const chartTitle = this.state.chartTitle;
+
 		if(this.state.currentSelectedChart === 'age'){
-			this.setState({
-				chart1Title: newTitle,
-				showPopup: !this.state.showPopup
-			});
-		}
-		else if(this.state.currentSelectedChart === 'heightWeight'){
-			this.setState({
-				chart2Title: newTitle,
-				showPopup: !this.state.showPopup
-			});
-		}
+    		chartTitle[0] = newTitle;
+    	} else if(this.state.currentSelectedChart === 'heightWeight'){
+    		chartTitle[1] = newTitle;
+    	} else if(this.state.currentSelectedChart === 'winningLosing'){
+    		chartTitle[2] = newTitle;
+    	}
+
+	    this.setState({
+	        chartTitle: chartTitle,
+	        showPopup: false
+	    });
 	}
 
 	togglePopup() {
@@ -54,14 +57,24 @@ class App extends Component {
   		return axios.get('https://www.thesportsdb.com/api/v1/json/1/lookup_all_players.php?id=' + teamID);
 	}
 	
+	getAllSeasonsForYear(year) {
+  		return axios.get('https://www.thesportsdb.com/api/v1/json/1/eventsseason.php?id=4391&s=' + year);
+	}
+
+	getChartTitleIndex(){
+		if(this.state.currentSelectedChart === 'age'){
+    		return this.state.chartTitle[0];
+    	} else if(this.state.currentSelectedChart === 'heightWeight'){
+    		return this.state.chartTitle[1];
+    	} else if(this.state.currentSelectedChart === 'winningLosing'){
+    		return this.state.chartTitle[2];
+    	}
+	}
+
 	componentDidMount() {
 		let teamObjects = {};
-
-		axios.all([this.getAllPlayersForTeams(134946), this.getAllPlayersForTeams(134942),this.getAllPlayersForTeams(134922),
-					this.getAllPlayersForTeams(134939),this.getAllPlayersForTeams(134935),this.getAllPlayersForTeams(134932),
-					this.getAllPlayersForTeams(134948),this.getAllPlayersForTeams(134937)])
-
-			/*
+		let seasonsObjects = {};
+		/*
 			Useless data
 			this.getAllPlayersForTeams(134918),this.getAllPlayersForTeams(134943),this.getAllPlayersForTeams(134938),
 			this.getAllPlayersForTeams(134923),this.getAllPlayersForTeams(134924),this.getAllPlayersForTeams(134934),
@@ -73,7 +86,9 @@ class App extends Component {
 			this.getAllPlayersForTeams(134945),this.getAllPlayersForTeams(134929),this.getAllPlayersForTeams(134936)
 			*/
 
-
+		axios.all([this.getAllPlayersForTeams(134946), this.getAllPlayersForTeams(134942),this.getAllPlayersForTeams(134922),
+					this.getAllPlayersForTeams(134939),this.getAllPlayersForTeams(134935),this.getAllPlayersForTeams(134932),
+					this.getAllPlayersForTeams(134948),this.getAllPlayersForTeams(134937)])
 		.then(arr => {
 			arr.forEach(value => {
 				let tempObject = processRequiredFieldsOnly(value.data.player);
@@ -82,6 +97,22 @@ class App extends Component {
 
 			this.setState({
 				teams: teamObjects
+			});
+		})
+
+		axios.all([this.getAllSeasonsForYear(2000),this.getAllSeasonsForYear(2001),this.getAllSeasonsForYear(2002),
+					this.getAllSeasonsForYear(2003),this.getAllSeasonsForYear(2004),this.getAllSeasonsForYear(2005),
+					this.getAllSeasonsForYear(2006),this.getAllSeasonsForYear(2007),this.getAllSeasonsForYear(2008),
+					this.getAllSeasonsForYear(2009),this.getAllSeasonsForYear(2010),this.getAllSeasonsForYear(2011),
+					this.getAllSeasonsForYear(2012),this.getAllSeasonsForYear(2013),this.getAllSeasonsForYear(2014)])
+		.then(arr => {
+			arr.forEach(value => {
+				let tempObject = processRequiredFieldsAllSeasons(value.data.events);
+				seasonsObjects[tempObject.year] = tempObject.eventArray;
+			});
+
+			this.setState({
+				allSeasons: seasonsObjects
 			});
 		})
 	}
@@ -96,16 +127,17 @@ class App extends Component {
 				/>
 
 		        <div className='chartTitleContainer'>
-		        	<label className='chartTitle'>{this.state.currentSelectedChart === 'age' ? this.state.chart1Title: this.state.chart2Title}</label>
+		        	<label className='chartTitle'>{this.getChartTitleIndex()}</label>
 		        	<button className="editTitle" onClick={this.togglePopup.bind(this)}><FontAwesomeIcon icon={faPen} size="lg"/></button>
 		        </div>
 
-				{this.state.currentSelectedChart === 'heightWeight' && <ScatterChart teams={this.state.teams} chartTitle={this.state.chart1Title} />}
-				{this.state.currentSelectedChart === 'age' && <BarChart teams={this.state.teams} chartTitle={this.state.chart2Title} />}
+				{this.state.currentSelectedChart === 'heightWeight' && <ScatterChart teams={this.state.teams} chartTitle={this.getChartTitleIndex()} />}
+				{this.state.currentSelectedChart === 'age' && <BarChart teams={this.state.teams} chartTitle={this.getChartTitleIndex()} />}
+				{this.state.currentSelectedChart === 'winningLosing' && <LineChart allSeasons={this.state.allSeasons} chartTitle={this.getChartTitleIndex()} />}
 
 				{this.state.showPopup ? 
 					<Popup
-						title={this.state.currentSelectedChart === 'age' ? this.state.chart1Title: this.state.chart2Title}
+						title={this.getChartTitleIndex()}
 						cancelPopup={this.togglePopup.bind(this)}
 						saveChartTitle={this.saveChartTitle}
 					/>
