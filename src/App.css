@@ -1,0 +1,85 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing: border-box;
+}
+
+.mainContainer{
+  text-align: center;
+  margin-top: 1em;
+}
+
+.barChart{
+  width: 60%;
+  margin: 2em auto;
+}
+
+.scatterChart{
+  width: 50%;
+  margin: 2em auto;
+}
+
+.popup {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  background-color: rgba(0,0,0, 0.5);
+}
+.popup_inner {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  top: 40%;
+  bottom: 40%;
+  margin: auto;
+}
+
+.chartTitleContainer{
+  margin: 0.5em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.editTitle{
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 1em;
+}
+
+.chartTitle{
+  font-size: 1.5em;
+}
+
+.chartTitleInput{
+    display: block;
+    margin: 1em auto;
+    width: 70%;
+    background: beige;
+    padding: 1em;
+    border-radius: 10px;
+    border: none;
+}
+
+.popup_inner button{
+  margin:0 1em;
+}
+
+.popup_inner input:focus{
+    outline: none;
+}
+
+.chartTypeSelect{
+  padding: 0.5em;
+  border-radius: 10px;
+}
+
+.chartTypeSelect:focus{
+    outline: none;
+}
